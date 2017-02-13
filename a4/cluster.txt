@@ -1,0 +1,7 @@
+
+Total Graph nodes and edges=4065 4445
+Total Graph nodes and edges=383 763
+ Cluster Created of Sizes=[37, 64, 100, 81, 23, 7, 15, 19, 2, 2, 4]
+ Number of communities discovered=11
+ Average number of users per community=34.81818181818182
+ jaccard accuracy=0.200

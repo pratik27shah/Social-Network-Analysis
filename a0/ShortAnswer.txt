@@ -1,0 +1,89 @@
+Enter your responses inline below and push this file to your private GitHub
+repository.
+
+
+1. Assume I plan to use the friend_overlap function above to quantify the
+similarity of two users. E.g., because 344 is larger than 1, I conclude that
+Jill Stein and Gary Johnson are more similar than Hillary Clinton and Donald
+Trump.
+
+How is this approach misleading? How might you fix it?
+
+Jill Stein and Gary Johnson, have more number of friends than Hillary Clinton and Donald Trump, 
+so they have more common friends. Whereas for Hillary Clinton and Donald Trump, 
+they have less number of friends so they  less common friends. 
+This approach is misleading as we are not considering the total number of friends of each candidate
+is not considered.
+This can be solved using:
+
+Jaccard Index:
+The Jaccard index, also known as the Jaccard similarity coefficient,
+ is a statistic used for comparing the similarity and diversity of sample sets
+
+    J ( A , B ) = | A ∩ B | / | A ∪ B | 
+
+
+
+
+
+2. Looking at the output of your followed_by_hillary_and_donald function, why
+do you think this user is followed by both Hilary Clinton and Donald Trump,
+who are rivals? Do some web searches to see if you can find out more
+information.
+
+Ans:Earvin "Magic" Johnson Jr. (born August 14, 1959) is an American retired professional basketball player who played point 
+guard for the Los Angeles Lakers of the National Basketball Association (NBA) for 13 seasons.Earvin "Magic" 
+Johnson has become the most powerful African American man in business
+
+Magic Johnson has also said that "I Don't Hate Trump We Can Be Friends After Hillary Wins"He is not a
+political rival he is a sportsperson of NBA and hence is followed by both hilary and trump
+
+
+
+
+
+
+
+
+
+
+
+
+3. There is a big difference in how many accounts each candidate follows (Gary
+Johnson follows over 3K accounts, while Donald Trump follows less than
+50). Why do you think this is? How might that affect our analysis?
+
+
+Gary Johnson:An American businessman, author, politician and the Libertarian Party nominee for President of the United States in the 2016 election. He served as the 29th Governor of New Mexico from 1995 to 2003 as a member of the Republican Party.
+ He was also the Libertarian Party's nominee for President of the United States in the 2012 election.
+ 
+ Trump:An American businessman, television personality, author, politician, and the Republican Party nominee
+ for President of the United States in the 2016 election.
+
+ Gary Johnson was a nominted for elections of 2012 so he had campign that time using twitter so he definately followed more people during his campaign from 2012 to 2016
+ wheres Trump started his presidential journey in 2016 so he follows less people the Gary Johnson
+
+The analysis gets affected because there are very few common friends between them which makes it difficult to analyse their
+election policy and find a similarity between them.
+
+
+
+
+
+4. The follower graph we've collected is incomplete. To expand it, we would
+have to also collect the list of accounts followed by each of the
+friends. That is, for each user X that Donald Trump follows, we would have to
+also collect all the users that X follows. Assuming we again use the API call
+https://dev.twitter.com/rest/reference/get/friends/ids, how many requests will
+we have to make? Given how Twitter does rate limiting
+(https://dev.twitter.com/rest/public/rate-limiting), approximately how many
+minutes will it take to collect this data?
+The no of request takes 15 request in a window of 15 mins,and once limit is exceded.
+The window remains closed for 15 mins before opening again.
+
+Donald trump:Friends 42,Time to get all friends:30 mins
+DrJillStein 4159,Time to get all friends:4155 mins
+GovGaryJohnson 3124,Time to get all friends:3120 mins
+HillaryClinton 748,Time to get all friends:735 mins
+
+Time to call the friends of all the 4 users:8040 mins

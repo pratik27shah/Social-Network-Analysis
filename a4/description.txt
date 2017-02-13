@@ -1,0 +1,45 @@
+THIS PROJECT IS ON FACEBOOK DATA
+
+Steps to install Facepy:
+Go to terminal/cmd in the anaconda scripts and type the below command
+pip install facepy
+
+Do Not delete configure.txt as it contains user tokens and keys
+
+Summary of Project:
+Collect.py
+
+In this file the data is collected use FaceBook API called Facepy the comments for the Page of Donald Trump are got by
+passing the page ID to the API calls.To create a graph for clusters here we see for pages that are liked by the official page of 
+Donald Trump and the pages those pages they like.For this HOP algorithms are used where every node are found and a edge is created between them
+For FB comments the comments are read from Today(current date) to a specific previous date given in unxi format.Here we have collected 
+Data from previous 10 months and stored the data using dataframe in a csv file called Trump.csv
+
+Classify.py
+Training Dataset
+The training dataset is creating using various FB pages like.Hate Trump and other pages and even comments from pages like INDIA today about
+Trump and his statements were used.To decide if data is positive or negative nltk library was used,The text was divided into tokens and emojis were
+removed using the ascii value and classify them in folders depending on the sentiments as positive and negative
+All values above 0.4 are taken in positive and and all text having values less then -0.4 are negative
+
+Testing Data
+Testing Data consist of data collected in collect.py the data is tokenized as done in the a2.py and the top 5
+positive and negative comments said by trump are shown.Here negative comments include any harsh statement
+The positive and negative statement are stored in the file and are read from the file.
+
+Cluster Data
+Here the cluster are formed using girvan newman algorithm.The clusters having values 1 are ignored and the each clusters 
+can have a max size of 100 nodes at one time.The data is written to a file called clusters.txt and the graphs are plotted 
+of the respective clusters of size>10.As we ignore do not include single nodes in cluster the total items might be a little less.
+
+
+Summarize.py
+The output is read from the file classify.txt and cluster.txt and written to a file summary.txt 
+
+
+Conclusion:
+From the above experiments it can be noted that the Facebook API does not have a time limit problem of 15 mins like twitter.
+It is always difficult to analyse based on the FB posts because at times the comments cannot videos/images
+While creating dataset for training pos/negative at times there could be an instance where the  negative data exceeds the positive date
+by a high limit eg:using data from pages like Hate Trump for classification
+Testing Dataset:Positive:1066 and negative:1066 

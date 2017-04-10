@@ -1,3 +1,8 @@
+'''
+Created on Sep 27, 2016
+
+@author: PRATIK SHAH
+'''
 # coding: utf-8
 
 # # CS579: Assignment 1
@@ -17,6 +22,11 @@ import copy
 import math
 import networkx as nx
 import urllib.request
+#from _overlapped import INFINITE
+INFINITE=1e10
+from audioop import reverse
+from networkx.classes.graph import Graph
+from networkx.classes.function import nodes
 
 
 ## Community Detection
@@ -74,7 +84,65 @@ def bfs(graph, root, max_depth):
     >>> sorted((node, sorted(parents)) for node, parents in node2parents.items())
     [('B', ['D']), ('D', ['E']), ('F', ['E']), ('G', ['D', 'F'])]
     """
-    ###TODO
+    '''
+    References: https://networkx.github.io/documentation/development/_modules/networkx/algorithms/shortest_paths/unweighted.html
+    '''
+    
+    
+    #root='E'
+    #graph=example_graph()
+    #max_depth=5
+    next_level=dict()       
+    current_level=defaultdict(list)
+    node2parents=defaultdict(list)
+    node2num_paths=defaultdict(list)
+    node2distances=defaultdict(list)
+    visited_dict=set(root)
+    node2distances[root]=0
+    next_level[root]=1
+    node2num_paths[root]=1
+    node2num_paths[root]=1
+    level=0
+    q=deque()
+    current_level[1].append(root)
+    while True:
+        if len(next_level)<=0: 
+            break
+        level=level+1
+
+        next_level.clear()
+        for element in current_level[level]:
+            temp_dist_element=node2distances[element]
+            visited_dict.add(element)
+            for nodes in graph.neighbors(element):
+                if(nodes not in visited_dict): 
+                    if nodes not in current_level[level]:
+                        next_level[nodes]=1 
+                        current_level[level+1].append(nodes)
+                        if nodes not in node2num_paths:
+                            #node2num_paths[nodes]=1
+                            node_temp_paths=1
+                            node2num_paths[nodes]=node_temp_paths
+                        if nodes not in node2distances:
+                            node_temp_dist=INFINITE
+                            node2distances[nodes]=node_temp_dist
+                        if nodes in node2distances:
+                                node_temp_dist=node2distances[nodes]
+                                node_temp_paths=node2num_paths[nodes]
+                                if node_temp_dist==temp_dist_element+1:
+                                    node_temp_paths=node_temp_paths+1
+                                if node_temp_dist>temp_dist_element+1:
+                                    node_temp_dist=temp_dist_element+1
+                                
+                        node2parents[nodes].append(element)
+                        node2distances[nodes]=node_temp_dist
+                        node2num_paths[nodes]=node_temp_paths
+                        
+        
+        if (max_depth <= level):  
+            break
+    return(node2distances,node2num_paths,node2parents) 
+   
     pass
 
 
@@ -90,6 +158,7 @@ def complexity_of_bfs(V, E, K):
     >>> type(v) == int or type(v) == float
     True
     """
+    return (V+E)
     ###TODO
     pass
 
@@ -129,7 +198,124 @@ def bottom_up(root, node2distances, node2num_paths, node2parents):
     >>> sorted(result.items())
     [(('A', 'B'), 1.0), (('B', 'C'), 1.0), (('B', 'D'), 3.0), (('D', 'E'), 4.5), (('D', 'G'), 0.5), (('E', 'F'), 1.5), (('F', 'G'), 0.5)]
     """
-    ###TODO
+    '''
+    node_credit={}
+    edges_dict={}
+    node_wt=defaultdict(list)
+    total_parent_weight=0
+    sorted_node2distances=sorted(node2distances.items(),key=lambda x:x[1],reverse=True)
+    for node in sorted_node2distances:
+        if(node!=root):
+            node_wt[node[0]]=1
+            
+    for element in sorted_node2distances:
+        total_value=0
+        if element[0]==root:
+            break
+
+        for t in node2parents[element[0]]:
+                total_value=total_value+node2num_paths[t]
+          
+        
+        for parent in node2parents[element[0]]:
+            #print(parent)
+            edge_list=(parent,element[0])
+            edge_list=sorted(edge_list)
+            
+            edges_dict[edge_list[0],edge_list[1]]=(node_wt[element[0]]*(node2num_paths[parent]/total_value))
+            
+               # edges_dict[(element[0],parent)]=(node_wt[element[0]]*(node2num_paths[parent]/total_value))
+            
+            if parent!=root:
+                edge_list=(parent,element[0])
+                edge_list=sorted(edge_list)
+            
+                node_wt[parent]=node_wt[parent]+edges_dict[edge_list[0],edge_list[1]]
+    return edges_dict
+    '''
+    q=deque();
+    parent_nodes=set()
+    node_wt=defaultdict(list)
+    nodepath_value=defaultdict(int)
+    added_dag_value=set()
+    result={}#defaultdict(list)
+    #node_wt_value=defaultdict(int)
+    result_node2distances=sorted(node2distances.items(),key=lambda x:x[1],reverse=True)
+    max_dept=result_node2distances[0][1]
+    for value in result_node2distances:
+        if value[0]!=root:
+           q.append(value[0])
+           node_wt[value[0]]=0.0
+         
+    while q:
+        element=q.popleft()
+        if element==root:
+            break
+        total_parents=len(node2parents[element])
+        temp_parent=node2parents[element][0]
+        if(total_parents==1):
+                edge_list=(element,temp_parent)
+                edge_list=sorted(edge_list)
+                if(node_wt[element] not in added_dag_value):
+                    node_wt[element]=node_wt[element]+1
+                    added_dag_value.add(element)
+                
+                temp_list=node_wt[element]
+                result[(edge_list[0],edge_list[1])]=temp_list 
+                if(temp_parent not in q):
+                    q.append(temp_parent)
+                if  temp_parent not in node_wt:
+                    node_wt[temp_parent]=temp_list+1
+                else:
+                    node_wt[temp_parent]=temp_list+node_wt[temp_parent]
+                    
+        else:         
+            total_value=0 
+            for t in node2parents[element]:
+                total_value=total_value+node2num_paths[t]
+            for parent_node in node2parents[element]:
+                edge_list=(element,parent_node)
+                edge_list=sorted(edge_list)
+                if(element not in added_dag_value):
+                    added_dag_value.add(element)
+                    node_wt[element]=node_wt[element]+1
+                path_weight=(node_wt[element])*(float(node2num_paths[parent_node]/total_value))
+                temp_list=path_weight
+                if(parent_node not in q):
+                    q.append(parent_node) 
+                if  parent_node not in node_wt:
+                    node_wt[parent_node]=path_weight+1
+                else:
+                    node_wt[parent_node]=path_weight+node_wt[parent_node]
+                result[edge_list[0],edge_list[1]]=temp_list
+    return result
+    '''
+    q=deque();
+    parent_nodes=set()
+    node_wt=defaultdict(list)
+    nodepath_value=defaultdict(int)
+    added_dag_value=set()
+    result={}#defaultdict(list)
+    #node_wt_value=defaultdict(int)
+    result_node2distances=sorted(node2distances.items(),key=lambda x:x[1],reverse=True)
+   
+    for values in result_node2distances:
+        if(value==root):
+            node_wt[value]=0
+        else:
+            node_wt[value]=1
+            q.append(value)
+    
+    while q:
+        element=q.popleft()
+        if element==root:
+                break;
+        totalparents=len(node2parents[element])
+        if(totalparents==1)
+            if (node_wt[element])    
+    return result
+     '''   
+        ###TODO
     pass
 
 
@@ -154,6 +340,29 @@ def approximate_betweenness(graph, max_depth):
     >>> sorted(approximate_betweenness(example_graph(), 2).items())
     [(('A', 'B'), 2.0), (('A', 'C'), 1.0), (('B', 'C'), 2.0), (('B', 'D'), 6.0), (('D', 'E'), 2.5), (('D', 'F'), 2.0), (('D', 'G'), 2.5), (('E', 'F'), 1.5), (('F', 'G'), 1.5)]
     """
+    #for j in max_depth:
+       # print (j)
+  
+    i=0
+    between=defaultdict(float)
+    j=0
+    for items in graph.degree().items():
+        j=j+1
+        node2distances,node2num_paths,node2parents=bfs(graph, items[0],max_depth)
+        resultset=bottom_up(items[0],node2distances,node2num_paths,node2parents)
+        for key in resultset.items():
+            
+            temp=key[0]
+            if temp not in between:
+                between[temp]=key[1]
+            else:
+                 between[temp]=between[key[0]]+key[1]
+                
+            #if j>=len(graph):
+              #  between[temp]=between[temp]/2.0
+    for key,value in between.items():
+        between[key]=float(value/2.0) 
+    return between
     ###TODO
     pass
 
@@ -175,6 +384,7 @@ def is_approximation_always_right():
     >>> type(s)
     <class 'str'>
     """
+    return 'no'
     ###TODO
     pass
 
@@ -209,7 +419,20 @@ def partition_girvan_newman(graph, max_depth):
     >>> sorted(components[1].nodes())
     ['D', 'E', 'F', 'G']
     """
-    ###TODO
+    graph_copy=graph.copy()
+    temp=approximate_betweenness(graph_copy,max_depth)
+    between=sorted(temp.items(),key=lambda x:(-x[1],x[0]))
+    graphs=list()
+    i=0
+    while len(graphs)<=1:
+       
+        graph_copy.remove_edge(between[i][0][1],between[i][0][0])
+        component=nx.connected_component_subgraphs(graph_copy)
+        graphs=list(component)
+        
+        i=1+i
+    return graphs
+       ###TODO
     pass
 
 def get_subgraph(graph, min_degree):
@@ -229,6 +452,12 @@ def get_subgraph(graph, min_degree):
     >>> len(subgraph.edges())
     2
     """
+    
+    list=sorted(graph.degree().items(),key=lambda x:x[1],reverse=True) 
+    for items in list:
+        if items[1]<min_degree:
+            graph.remove_node(items[0])      
+    return graph
     ###TODO
     pass
 
@@ -250,6 +479,14 @@ def volume(nodes, graph):
     >>> volume(['A', 'B', 'C'], example_graph())
     4
     """
+    return len(list(graph.edges_iter(nodes)))
+    #for nodesv in graph:
+     #   if nodesv[0] in nodes:
+    #        vol=vol+1
+         
+   # vols=len(graph.edges(nodes))
+   # return vols
+   
     ###TODO
     pass
 
@@ -269,6 +506,13 @@ def cut(S, T, graph):
     >>> cut(['A', 'B', 'C'], ['D', 'E', 'F', 'G'], example_graph())
     1
     """
+    
+    cut=0   
+    for set in S:
+        for tnodes in T:
+            if graph.has_edge(set,tnodes):
+                cut=cut+1  
+    return cut
     ###TODO
     pass
 
@@ -284,6 +528,10 @@ def norm_cut(S, T, graph):
       An float representing the normalized cut value
 
     """
+    cutvalue=cut(S, T, graph)
+    volumeS=float(volume(S,graph))
+    volumeT=float(volume(T,graph))
+    return (float(cutvalue/volumeS)+float(cutvalue/volumeT))
     ###TODO
     pass
 
@@ -305,6 +553,13 @@ def score_max_depths(graph, max_depths):
       norm_cut value obtained by the partitions returned by
       partition_girvan_newman. See Log.txt for an example.
     """
+    result=[]
+    for i in max_depths:
+        
+        parts=partition_girvan_newman(graph,i)
+        #result=norm_cut[parts[0],parts[1],graph]
+        result.append((i,norm_cut(parts[0].nodes(),parts[1].nodes(),graph)))
+    return result
     ###TODO
     pass
 
@@ -344,6 +599,17 @@ def make_training_graph(graph, test_node, n):
     ['F', 'G']
     """
     ###TODO
+    train_graph=graph.copy()
+    list=train_graph.neighbors(test_node)
+    list.sort()
+    i=0
+    for value in list:
+        if i<n:
+            train_graph.remove_edge(test_node,value)
+        else:
+            break
+        i=i+1
+    return train_graph
     pass
 
 
@@ -375,6 +641,18 @@ def jaccard(graph, node, k):
     [(('D', 'E'), 0.5), (('D', 'A'), 0.0)]
     """
     ###TODO
+    '''References=https://github.com/iit-cs579/main/blob/master/lec/l07/l07.ipynb'''
+    scores = []
+    neighbors = set(graph.neighbors(node))
+    for n in graph.nodes():
+        if n != node and not graph.has_edge(node, n):
+            neighbors2 = set(graph.neighbors(n))
+            score = float((len(neighbors & neighbors2)) / (len(neighbors | neighbors2)))
+            scores.append(((node, n), score))
+   
+   
+    return sorted(scores, key=lambda x:(-x[1],x[0][1]))[:k]
+    #return scores[:k]
     pass
 
 
@@ -422,7 +700,19 @@ def path_score(graph, root, k, beta):
     >>> path_score(train_graph, 'D', k=4, beta=.5)
     [(('D', 'F'), 0.5), (('D', 'A'), 0.25), (('D', 'C'), 0.25)]
     """
+    result=[]
+    graph_copy=graph.copy()
+    node2distances,node2num_paths,node2parents=bfs(graph_copy,root,INFINITE)
+    for node in graph_copy:
+        
+        if node!=root and not graph_copy.has_edge(root,node):
+            result.append(((root,node),beta**node2distances[node]*node2num_paths[node]))
+    
+    result=sorted(result,key=lambda x:(-x[1],x[0][1]))
+
+    return result[:k]
     ###TODO
+    
     pass
 
 
@@ -445,6 +735,9 @@ def evaluate(predicted_edges, graph):
     0.5
     """
     ###TODO
+    lent=len(predicted_edges)
+    value=len([x for x in predicted_edges if graph.has_edge(*x)])*1.0
+    return  value / lent
     pass
 
 
@@ -486,11 +779,9 @@ def main():
     print('cluster 2 nodes:')
     print(clusters[1].nodes())
 
+    
     test_node = 'Bill Gates'
     train_graph = make_training_graph(subgraph, test_node, 5)
-    print('train_graph has %d nodes and %d edges' %
-          (train_graph.order(), train_graph.number_of_edges()))
-
 
     jaccard_scores = jaccard(train_graph, test_node, 5)
     print('\ntop jaccard scores for Bill Gates:')

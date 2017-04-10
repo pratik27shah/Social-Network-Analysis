@@ -1,3 +1,9 @@
+'''
+ Created on Oct 29, 2016
+
+@author: PRATIK SHAH
+'''
+
 # coding: utf-8
 
 # # Assignment 3:  Recommendation systems
@@ -51,6 +57,12 @@ def tokenize(movies):
     >>> movies['tokens'].tolist()
     [['horror', 'romance'], ['sci-fi']]
     """
+    genres=movies.genres
+    store = []
+    for value in genres:
+        store.append(tokenize_string(value))
+    movies["tokens"]=store
+    return movies
     ###TODO
     pass
 
@@ -77,7 +89,104 @@ def featurize(movies):
       - The movies DataFrame, which has been modified to include a column named 'features'.
       - The vocab, a dict from term to int. Make sure the vocab is sorted alphabetically as in a2 (e.g., {'aardvark': 0, 'boy': 1, ...})
     """
+    df=dict()
+    df_cal=dict()
+    tfi=dict()
+    vocab=dict()
+    index=0
+    df_unique_movie_id=set()
+    df_unique_movie=[]
+    dict_list=dict()
+    dict_tokens_index=dict()
+    unique_genres=set()
+    flag=1
+    totalCount=0.0
+    index_key=0
+    value_old=""
+    for genres in movies["tokens"].tolist():
+        if(movies.movieId[index] not in df_unique_movie_id ):
+            movie_id=movies.movieId[index]
+            df_unique_movie_id.add(movies.movieId[index])
+            totalCount=totalCount+1.0
+            settings={}
+            flag=0
+            settings["max_count"]=1
+            unique_genres.clear()
+            genres=sorted(genres)
+            for value in genres:
+                if value not in settings:
+                    settings[value]=1
+                if(flag==1): 
+                    if(value_old==value):
+                        settings["max_count"]= settings["max_count"]+1.0
+                        settings[value]=settings[value]+1
+                if(value not in df and value not in unique_genres):
+                    df[value]=1
+                    flag=1
+                    df_unique_movie.append(value)
+                    unique_genres.add(value)
+                else:
+                    if(value not in unique_genres):
+                        flag=1
+                        df[value]=df[value]+1
+                        unique_genres.add(value)
+                value_old=value    
+            dict_list[index_key]=settings
+            dict_tokens_index[index_key]=movies.tokens[index_key]
+            index_key=index_key+1
+        index=index+1
+       
     ###TODO
+    i=0
+    df_unique_movie_genre=sorted(df_unique_movie)
+    for values in df_unique_movie_genre:
+        vocab[values]=i
+        i=i+1
+        df_cal[values]=math.log10(totalCount/df[values])
+    N=index
+    i=0
+    data = []
+    row = []
+    column=[]
+    maxcount=1
+    store = []
+    rowcounter=0
+    key=0
+    df_cal=sorted(df_cal.items())
+    while(True):
+        data = []
+        row = []
+        column=[]
+    #for movieid in movies.movieId.tolist():
+        if(key>=index_key):
+            break
+        termsvalue=dict_list[key]
+        col=0
+        key=key+1
+        for genrename,val in df_cal:
+            flag_add=0  
+        #    for keyval,term in value.items():
+            if(genrename  in dict_tokens_index[key-1]):
+                
+                terms=termsvalue[genrename]      
+                tfidf=(terms/termsvalue["max_count"])*val
+                column.append(vocab[genrename])
+                data.append(tfidf)
+                flag_add=1
+                row.append(0)
+            if(flag_add==0):
+                row.append(0)      
+                column.append(vocab[genrename])
+                data.append(0)
+            #col=col+1
+        #csr_matrix((data, (row, column)))
+        #movies.set_value(key-1,"features",csr_matrix((data, (row, column))))
+
+        store.append(csr_matrix((data, (row, column))))           
+        #movies["features"]=csr_matrix((data, (row, column)))
+        rowcounter=rowcounter+1
+    movies["features"]=store
+    return movies,vocab
     pass
 
 
@@ -103,8 +212,40 @@ def cosine_sim(a, b):
       where ||a|| indicates the Euclidean norm (aka L2 norm) of vector a.
     """
     ###TODO
+    norm_multiplication = 0.0
+    cosine = 0.0
+    result = 0.0
+    j=0
+    size=a._shape[0]
+    while j<=a._shape[1]-1:
+                if(a[0,j]==0 or b[0,j]==0):
+                    result=result+0
+                else:
+                    result = result + a[0,j]* b[0,j]
+                j=j+1
+
+    norma=norm(a)
+    normb=norm(b)
+    if(norma*normb!=0):
+        cosine=result/(norma*normb)
+    else:
+        cosine=0.0;
+    return cosine
     pass
 
+
+def norm(vector):
+    sumval = 0.0
+    j=0 
+    while j<vector._shape[1]:
+        if(vector[0,j]==0):
+            sumval=sumval+0
+        else:
+            sumval = sumval + (vector[0,j]**2)
+        j=j+1
+    euclidean_norm = math.sqrt(sumval) 
+    return euclidean_norm
+    
 
 def make_predictions(movies, ratings_train, ratings_test):
     """
@@ -128,7 +269,57 @@ def make_predictions(movies, ratings_train, ratings_test):
     Returns:
       A numpy array containing one predicted rating for each element of ratings_test.
     """
-    ###TODO
+    dict_list=dict()
+    dict_computed_cosine_storage=dict()
+    indexuid=-1
+    movieId_test=ratings_test.movieId.tolist()
+    movieId_train=ratings_train.movieId.tolist()
+    result=0.0
+
+    for uid in ratings_test.userId:
+
+        indexuid=indexuid+1
+        #store=[]
+        ratingmovieid=movieId_test[indexuid]
+        a=movies.loc[movies.movieId==ratingmovieid].features.values[0]
+        list_val=[]
+        list_val=ratings_train.loc[ratings_train.userId==uid]
+        index_value=-1
+        Total=0.0
+        cosineadd=0.0
+        avg=0.0
+        dict_computed_cosine_storage=dict()
+        for movieId in list_val.movieId.values :
+            index_value=index_value+1
+            b=movies.loc[movies.movieId==movieId]
+            valuegenres=b.genres.values[0]
+            if valuegenres not in dict_computed_cosine_storage:
+                result=cosine_sim(a,b.features.values[0])
+                dict_computed_cosine_storage[valuegenres]=result
+            else:
+                result=dict_computed_cosine_storage[valuegenres]
+            if(result>=0):
+               
+                cosineadd=cosineadd+result
+                
+                rate=list_val.rating.values[index_value]
+                Total=(result*rate)+Total
+                #index_value=index_value+1
+                avg=avg+rate
+            
+            #break;
+            #    dict_list[movieId_train[indexuserids]]=cosine_sim(a.features.values[0],b.features.values[0])
+        #print (cosineadd)
+        if(cosineadd==0.0):
+           dict_list[indexuid]=avg/(len(list_val.movieId.values ))
+        if(cosineadd!=0):
+            dict_list[indexuid] =(Total)/cosineadd  
+
+    tokens=[]    
+    for key,value in    dict_list.items():
+        tokens.append(value) 
+        #print(value)  
+    return np.array(tokens)
     pass
 
 
